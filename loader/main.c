@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -439,7 +440,6 @@ extern void *__cxa_finalize;
 extern void *__cxa_call_unexpected;
 extern void *__gnu_unwind_frame;
 extern void *__stack_chk_fail;
-int open(const char *pathname, int flags);
 
 static int __stack_chk_guard_fake = 0x42424242;
 

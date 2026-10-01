@@ -10,6 +10,14 @@ endif()
 
 project(PoppyKart C CXX)
 include("${VITASDK}/share/vita.cmake" REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SDL2_mixer REQUIRED IMPORTED_TARGET SDL2_mixer)
+pkg_check_modules(SDL2_image REQUIRED IMPORTED_TARGET SDL2_image)
+pkg_check_modules(SDL2_ttf REQUIRED IMPORTED_TARGET SDL2_ttf)
+pkg_check_modules(SDL2_net REQUIRED IMPORTED_TARGET SDL2_net)
+pkg_check_modules(sndfile REQUIRED IMPORTED_TARGET sndfile)
+pkg_check_modules(vorbisfile REQUIRED IMPORTED_TARGET vorbisfile)
+pkg_check_modules(openal REQUIRED IMPORTED_TARGET openal)
 set(VITA_APP_NAME "Poppy Kart Collection")
 set(VITA_TITLEID  "POPPYKART")
 set(VITA_MKSFOEX_FLAGS "-d ATTRIBUTE2=12")
@@ -25,8 +33,17 @@ add_executable(PoppyKart
   loader/ctype_patch.c
 )
 
+set_target_properties(PoppyKart PROPERTIES LINKER_LANGUAGE CXX)
+
 target_link_libraries(PoppyKart
-  -Wl,--whole-archive pthread -Wl,--no-whole-archive
+  -pthread
+  PkgConfig::SDL2_mixer
+  PkgConfig::SDL2_image
+  PkgConfig::SDL2_ttf
+  PkgConfig::SDL2_net
+  PkgConfig::sndfile
+  PkgConfig::vorbisfile
+  PkgConfig::openal
   SDL2_mixer
   SDL2_image
   SDL2_ttf
@@ -40,7 +57,7 @@ target_link_libraries(PoppyKart
   z
   m
   stdc++
-  opensles
+  OpenSLES
   sndfile
   vorbis
   vorbisenc
@@ -68,7 +85,6 @@ target_link_libraries(PoppyKart
   SceFios2_stub
   SceGxm_stub
   SceIme_stub
-  SceLibcBridge_stub
   SceShaccCg_stub
   SceSysmodule_stub
   ScePower_stub
@@ -76,7 +92,7 @@ target_link_libraries(PoppyKart
   SceMotion_stub
   SceHid_stub
   SceVshBridge_stub
-  SceKernelDmacmgr_stub
+  SceKernelDmacMgr_stub
 )
 
 
@@ -85,8 +101,20 @@ add_executable(companion
   loader/dialog.c
 )
 
+set_target_properties(companion PROPERTIES LINKER_LANGUAGE CXX)
+
+# Reserve space for vita-elf-create import metadata between load segments.
+set_property(TARGET companion APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--defsym=__sce_headroom=0x10000")
+
 target_link_libraries(companion
-  -Wl,--whole-archive pthread -Wl,--no-whole-archive
+  -pthread
+  PkgConfig::SDL2_mixer
+  PkgConfig::SDL2_image
+  PkgConfig::SDL2_ttf
+  PkgConfig::SDL2_net
+  PkgConfig::sndfile
+  PkgConfig::vorbisfile
+  PkgConfig::openal
   SDL2_mixer
   SDL2_image
   SDL2
@@ -97,7 +125,7 @@ target_link_libraries(companion
   z
   m
   stdc++
-  opensles
+  OpenSLES
   sndfile
   vorbis
   vorbisenc
@@ -122,7 +150,6 @@ target_link_libraries(companion
   SceDisplay_stub
   SceFios2_stub
   SceGxm_stub
-  SceLibcBridge_stub
   SceShaccCg_stub
   SceSysmodule_stub
   ScePower_stub
@@ -130,7 +157,7 @@ target_link_libraries(companion
   SceMotion_stub
   SceHid_stub
   SceVshBridge_stub
-  SceKernelDmacmgr_stub
+  SceKernelDmacMgr_stub
 )
 
 vita_create_self(eboot.bin companion UNSAFE)
@@ -148,3 +175,5 @@ vita_create_vpk(PoppyKart.vpk ${VITA_TITLEID} eboot.bin
        ${CMAKE_SOURCE_DIR}/settings.cfg settings.cfg
        ${CMAKE_BINARY_DIR}/game.bin game.bin
 )
+
+set_property(SOURCE loader/so_util.c APPEND PROPERTY COMPILE_OPTIONS -Wno-error=return-mismatch -Wno-error=incompatible-pointer-types)
